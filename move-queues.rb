@@ -94,11 +94,12 @@ def move_messages(options, queue_name)
 	counter = 0
 	begin
 		msgs = client_from(options).queue(queue_name).get(n: n)
-		client_to(options).queue(queue_name).post(msgs.map{ |msg| {body: msg.body} })
-		client_from(options).queue(queue_name).delete_messages(msgs.map{ |msg| {id: msg.id, reservation_id: msg.reservation_id} })
-
+		if msgs.count > 0
+			client_to(options).queue(queue_name).post(msgs.map{ |msg| {body: msg.body} })
+			client_from(options).queue(queue_name).delete_messages(msgs.map{ |msg| {id: msg.id, reservation_id: msg.reservation_id} })
+			print '.'
+		end
 		counter += msgs.count
-		print '.'
 	end while msgs.count >= n
 
 	puts "\nMigrated #{counter} messages"
