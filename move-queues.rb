@@ -72,12 +72,22 @@ def client_to(options)
 end
 
 def move_queue(options, queue_name)
-	puts "--moving queue #{queue_name}".ljust(80, '-')
+	puts "\n--moving queue #{queue_name}".ljust(80, '-')
 
 	info = client_from(options).queue(queue_name).info
+	info_to = client_to(options).queue(queue_name).info
+	info.delete('size')
+	info.delete('total_messages')
+	info_to.delete('size')
+	info_to.delete('total_messages')
 
-	# Delete target queue if existing
-	client_to(options).queue(queue_name).delete_queue
+	if info == info_to
+		puts 'Target queue already exists and exactly same as source one. Resuming'
+	else
+		puts 'Deleting target queue because it\'s different from the source one'
+
+		client_to(options).queue(queue_name).delete_queue
+	end
 
 	# Create target queue with all possible params
 	client_to(options).create_queue(queue_name, info)
@@ -85,6 +95,7 @@ def move_queue(options, queue_name)
 	if info['type'] == 'pull'
 		move_messages(options, queue_name)
 	else
+		puts "\nPush queue, skipping messages migration"
 		true
 	end
 end
