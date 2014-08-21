@@ -7,7 +7,7 @@ require 'iron_mq'
 require 'optparse'
 require 'json'
 
-options = {}
+options = {n: 100}
 
 OptionParser.new do |opts|
   opts.banner = "Usage: move-queues.rb [options]"
@@ -26,6 +26,14 @@ OptionParser.new do |opts|
 
   opts.on("-q QUEUE_NAME", "--queue QUEUE_NAME", "If set, move only this queue") do |v|
     options[:queue] = v
+  end
+
+  opts.on("-n COUNT", "--per COUNT", "get/post/delete N messages per request. Default is #{options[:n]}") do |v|
+    options[:n] = v.to_i
+  end
+
+  opts.on("--skip-messages", "Do not copy messages between queues") do |v|
+    options[:skip_messages] = v
   end
 
  	opts.separator ""
@@ -97,7 +105,11 @@ def move_queue(options, queue_name)
 	client_to(options).create_queue(queue_name, info)
 
 	if info['type'] == 'pull'
-		move_messages(options, queue_name)
+		if options[:skip_messages]
+			puts "\nSkipping messages migration"
+		else
+			move_messages(options, queue_name)
+		end
 	else
 		puts "\nPush queue, skipping messages migration"
 		true
@@ -105,7 +117,7 @@ def move_queue(options, queue_name)
 end
 
 def move_messages(options, queue_name)
-	n = 100
+	n = options[:n]
 	counter = 0
 	begin
 		msgs = client_from(options).queue(queue_name).get(n: n)
