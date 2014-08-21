@@ -75,13 +75,17 @@ def move_queue(options, queue_name)
 	puts "\n--moving queue #{queue_name}".ljust(80, '-')
 
 	info = client_from(options).queue(queue_name).info
-	info_to = client_to(options).queue(queue_name).info
+	info_to = client_to(options).queue(queue_name).info rescue nil
 	info.delete('size')
 	info.delete('total_messages')
-	info_to.delete('size')
-	info_to.delete('total_messages')
+	if info_to
+		info_to.delete('size')
+		info_to.delete('total_messages')
+	end
 
-	if info == info_to
+	if info_to.nil?
+		puts 'Creating target queue'
+	elsif info == info_to
 		puts 'Target queue already exists and exactly same as source one. Resuming'
 	else
 		puts 'Deleting target queue because it\'s different from the source one'
