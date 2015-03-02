@@ -1,0 +1,141 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'bundler/setup'
+require 'optparse'
+require 'json'
+require File.dirname(__FILE__) + '/mq_migrator.rb'
+require File.dirname(__FILE__) + '/auth_client.rb'
+
+commands = ['all', 'user', 'project', 'queue']
+@options = {n: 100}
+
+if $*.size == 0 || (not commands.include?($*[0]))
+  puts 'usage: move-queues COMMAND [OPTIONS]'
+  puts "    COMMAND: #{commands.join(', ')}"
+  puts '    run move-queues COMMAND --help to get more information about each command'
+  exit 1
+end
+command = $*.shift
+
+def verify_host_format(str)
+  if !str.match(/^[a-z0-9.\-]+(:\d+)?$/i)
+    puts "Wrong host format, must be host:port"
+    exit 1
+  end
+end
+
+def common_opts(opts)
+  opts.on("--from HOST", "Set source host:port (required)") do |v|
+    verify_host_format(v)
+    @options[:from] = v
+  end
+  opts.on("--to HOST", "Set destination host:port (required)") do |v|
+    verify_host_format(v)
+    @options[:to] = v
+  end
+  opts.on("-t TOKEN", "--token TOKEN", "Set API token (required)") do |v|
+    @options[:token] = v
+  end
+
+  opts.on("-n COUNT", "--per COUNT", Integer, "get/post/delete N messages per request. Default is #{@options[:n]}") do |v|
+    @options[:n] = v
+  end
+
+  opts.on("--skip-messages", "Do not copy messages between queues") do |v|
+    @options[:skip_messages] = v
+  end
+
+  opts.separator ""
+  opts.on("-v", "--[no-]verbose", "Run verbosely") do |v|
+    @options[:verbose] = v
+    if @options[:verbose]
+      IronCore::Logger.logger.level = Logger::DEBUG
+      RestClient.log = STDOUT
+    end
+  end
+  opts.on_tail("-h", "--help", "Show this message") do
+    puts opts
+    exit
+  end
+end
+
+def parse_opts(opts)
+  begin
+    opts.parse!
+  rescue OptionParser::ParseError
+    puts $!.to_s
+    exit 1
+  end
+end
+
+case command
+when 'all'
+  opts = OptionParser.new do |opts|
+    opts.banner = "Usage: move-queues all [options]"
+    opts.on("-a AUTHHOST", "--auth AUTHHOST", "Set ironauth host in host:port format (required)") do |v|
+      verify_host_format(v)
+      @options[:ironauth] = v
+    end
+
+    common_opts(opts)
+  end
+  parse_opts(opts)
+
+  migrator = MqMigrator.new(@options[:token], @options[:from], @options[:to])
+  auth_client = AuthClient.new(migrator, @options[:token], @options[:ironauth], @options)
+  auth_client.migrate_all
+
+when 'user'
+  opts = OptionParser.new do |opts|
+    opts.banner = "Usage: move-queues user [options]"
+    opts.on("-a AUTHHOST", "--auth AUTHHOST", "Set ironauth host in host:port format (required)") do |v|
+      @options[:ironauth] = v
+    end
+    opts.on("-u USER_ID", "--user USER_ID", "Migrate all projects for this user (required)") do |v|
+      @options[:user] = v
+    end
+
+    common_opts(opts)
+  end
+  parse_opts(opts)
+
+  migrator = MqMigrator.new(@options[:token], @options[:from], @options[:to])
+  auth_client = AuthClient.new(migrator, @options[:token], @options[:ironauth], @options)
+  auth_client.migrate_user(@options[:user])
+
+
+when 'project'
+  opts = OptionParser.new do |opts|
+    opts.banner = "Usage: move-queues all [options]"
+    opts.on("-p PROJECT_ID", "--project-id PROJECT_ID", "Set Project ID (required)") do |v|
+      @options[:project_id] = v
+    end
+    common_opts(opts)
+  end
+  parse_opts(opts)
+
+  migrator = MqMigrator.new(@options[:token], @options[:from], @options[:to])
+  migrator.move_queues(@options[:project_id], @options)
+
+when 'queue'
+  opts = OptionParser.new do |opts|
+    opts.banner = "Usage: move-queues all [options]"
+    opts.on("-p PROJECT_ID", "--project-id PROJECT_ID", "Set Project ID (required)") do |v|
+      options[:project_id] = v
+    end
+    #
+    opts.on("-q QUEUE_NAME", "--queue QUEUE_NAME", "If set, move only this queue") do |v|
+      @options[:queue] = v
+    end
+    common_opts(opts)
+  end
+  parse_opts(opts)
+
+  migrator = MqMigrator.new(@options[:token], @options[:from], @options[:to])
+  migrator.move_queue(@options[:project_id], @options[:queue], @options)
+
+else
+  puts "WRONG COMMAND"
+  exit 1
+end

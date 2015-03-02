@@ -1,29 +1,31 @@
 GIT
   remote: https://github.com/iron-io/iron_core_ruby.git
-  revision: f173974f8befa1f01058cbb1adbe0f0e6662fe30
+  revision: b168534fc78119e34dcf543ab39a167d53acbbb5
   branch: master
   specs:
-    iron_core (1.0.4)
-      rest (>= 2.6.4)
+    iron_core (1.0.7)
+      rest (>= 3.0.4)
 
 GIT
   remote: https://github.com/iron-io/iron_mq_ruby.git
-  revision: bda169dae6733e1760ef1f38bdcb4601ed4cf45e
+  revision: 1f977cd1dcdb6ee08af5a88095cbcba74409253b
   branch: v3
   specs:
-    iron_mq (5.0.2)
+    iron_mq (6.0.0.pre1)
       iron_core (>= 0.5.1)
 
 GEM
   remote: https://rubygems.org/
   specs:
+    mime-types (2.4.3)
     net-http-persistent (2.9.4)
-    netrc (0.7.7)
-    rest (2.7.2)
+    netrc (0.10.3)
+    rest (3.0.6)
       net-http-persistent (>= 2.9.1)
-      rest_client (>= 1.7.1)
-    rest_client (1.7.3)
-      netrc (~> 0.7.7)
+      netrc
+    rest-client (1.7.3)
+      mime-types (>= 1.16, < 3.0)
+      netrc (~> 0.7)
 
 PLATFORMS
   ruby
@@ -31,3 +33,4 @@ PLATFORMS
 DEPENDENCIES
   iron_core!
   iron_mq!
+  rest-client
