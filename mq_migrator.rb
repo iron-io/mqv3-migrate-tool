@@ -100,7 +100,11 @@ class MqMigrator
     puts "  Moving #{queues.count} queues from #{@from} to #{@to}\n"
 
     queues.each do |queue_name|
-      move_queue(project_id, queue_name, options)
+      begin
+        move_queue(project_id, queue_name, options)
+      rescue StandardError => ex
+        puts "[WARN] Can not move queue '#{queue_name}': #{ex.message}"
+      end
     end
   end
 

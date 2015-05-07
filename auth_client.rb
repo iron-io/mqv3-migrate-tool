@@ -43,17 +43,20 @@ class AuthClient
       puts "[WARN] NO TOKEN FOR USER. skipping migration"
       return
     end
-
-    projects = get_projects(token)
+    projects = nil
+    begin
+      projects = get_projects(token)
+    rescue StandardError => ex
+      puts "[WARN] Can't get projects. #{ex.message}"
+      return
+    end
     puts "  Found #{projects.count} projects"
     jj projects if @options[:verbose]
 
     projects.each do |project|
       @migrator.move_queues(project['id'], @options)
     end
-
   end
-
 
   def list_users(options = {})
     per_page = 100

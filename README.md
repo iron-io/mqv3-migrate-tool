@@ -3,7 +3,7 @@ mqv3-migrate-tool
 
 Tool that helping migration queues between MQ v3 installations
 
-Reference `.move-queues --help` for details
+Reference `./move-queues --help` for details
 
 Usage example:
 
