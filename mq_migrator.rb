@@ -89,12 +89,17 @@ class MqMigrator
 
     opts = {raw: true, per_page: per_page}
     begin
-      opts.merge!(previous: previous) if previous
-      l1 = client_from(project_id).list(opts.merge({}))
-      res = l1[0].raw[1].map { |queue| queue['name'] }
-      queues += res
-      previous = res.last
-    end while res.count >= per_page
+      begin
+        opts.merge!(previous: previous) if previous
+        l1 = client_from(project_id).list(opts.merge({}))
+        res = l1[0].raw[1].map { |queue| queue['name'] }
+        queues += res
+        previous = res.last
+      end while res.count >= per_page
+    rescue StandardError => ex
+      puts "[WARN] Can not get list of queues for project #{project_id}: #{ex.message}"
+      return
+    end
 
     puts "--Project ##{project_id}".ljust(80, '-')
     puts "  Moving #{queues.count} queues from #{@from} to #{@to}\n"
