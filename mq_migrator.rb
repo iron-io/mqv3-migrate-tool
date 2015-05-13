@@ -28,8 +28,8 @@ class MqMigrator
 
     puts "  Moving queue #{queue_name}"
 
-    info = client_from(project_id).queue(queue_name).info
-    info_to = client_to(project_id).queue(queue_name).info rescue nil
+    info = client_from(project_id).queue(queue_name).update({}).raw['queue']
+    info_to = client_to(project_id).queue(queue_name).update({}).raw['queue'] rescue nil
     info.delete('size')
     info.delete('total_messages')
     if info_to
