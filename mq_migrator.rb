@@ -41,6 +41,8 @@ class MqMigrator
       puts '    Creating target queue'
     elsif info == info_to
       puts '    Target queue already exists and exactly same as source one. Resuming'
+    elsif options[:ignore_info]
+      puts '    Target queue different from source one. Ignoring it due to option set'
     else
       puts '    Deleting target queue because it\'s different from the source one'
 

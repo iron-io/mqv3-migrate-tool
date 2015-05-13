@@ -46,6 +46,10 @@ def common_opts(opts)
     @options[:skip_messages] = v
   end
 
+  opts.on("--ignore-info", "Ignore differences in queue info between source and destination queue") do |v|
+    @options[:ignore_info] = v
+  end
+
   opts.separator ""
   opts.on("-v", "--[no-]verbose", "Run verbosely") do |v|
     @options[:verbose] = v
