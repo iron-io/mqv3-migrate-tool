@@ -8,7 +8,7 @@ GIT
 
 GIT
   remote: https://github.com/iron-io/iron_mq_ruby.git
-  revision: 1f977cd1dcdb6ee08af5a88095cbcba74409253b
+  revision: 4cfa67167e288ebb606a32d7d7b6d246b82c159c
   branch: v3
   specs:
     iron_mq (6.0.0.pre1)
