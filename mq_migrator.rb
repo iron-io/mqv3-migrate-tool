@@ -37,12 +37,15 @@ class MqMigrator
       info_to.delete('total_messages')
     end
 
+    create = true
     if info_to.nil?
       puts '    Creating target queue'
     elsif info == info_to
       puts '    Target queue already exists and exactly same as source one. Resuming'
+      create = false
     elsif options[:ignore_info]
       puts '    Target queue different from source one. Ignoring it due to option set'
+      create = false
     else
       puts '    Deleting target queue because it\'s different from the source one'
 
@@ -50,7 +53,7 @@ class MqMigrator
     end
 
     # Create target queue with all possible params
-    client_to(project_id).create_queue(queue_name, info)
+    client_to(project_id).create_queue(queue_name, info) if create
 
     if info['type'] == 'pull'
       if options[:skip_messages]
