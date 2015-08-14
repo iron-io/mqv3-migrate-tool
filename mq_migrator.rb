@@ -37,16 +37,17 @@ class MqMigrator
       info_to.delete('total_messages')
     end
 
+    # TODO rate_limit nil on 3.2, need to ignore in equality check
+
     if info_to.nil?
       puts '    Creating target queue'
     elsif info == info_to
       puts '    Target queue already exists and exactly same as source one. Resuming'
     elsif options[:ignore_info]
       puts '    Target queue different from source one. Ignoring it due to option set'
-    else
-      puts '    Deleting target queue because it\'s different from the source one'
-
-      client_to(project_id).queue(queue_name).delete_queue
+    elsif info['type'] != info_to['type']
+        puts '    Deleting target queue because type is different from the source one'
+        client_to(project_id).queue(queue_name).delete_queue
     end
 
     # Create target queue with all possible params
