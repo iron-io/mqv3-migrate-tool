@@ -28,7 +28,12 @@ class MqMigrator
 
     puts "  Moving queue #{queue_name}"
 
-    info = client_from(project_id).queue(queue_name).info
+    begin
+      info = client_from(project_id).queue(queue_name).info_only
+    rescue Exception => ex
+      # not all mqs have the /info endpoint deployed, revert to normal info
+      info = client_from(project_id).queue(queue_name).info
+    end
     info_to = client_to(project_id).queue(queue_name).info rescue nil
     info.delete('size')
     info.delete('total_messages')
